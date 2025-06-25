@@ -1,5 +1,7 @@
 <?php
 
+use Stripe\Stripe;
+
 function responseSuccess($message, $data = null)
 {
     return response()->json([
@@ -24,4 +26,9 @@ function responseValidationError($errors, $statusCode = 422)
         'message' => 'Validation Error',
         'errors' => $errors,
     ], $statusCode);
+}
+
+function setStripeKey()
+{
+    Stripe::setApiKey(env("STRIPE_SECRET_KEY"));
 }

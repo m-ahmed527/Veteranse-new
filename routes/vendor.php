@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Vendor\PlanController;
 use App\Http\Controllers\Api\Vendor\ProductController;
 use App\Http\Controllers\Api\Vendor\ServiceController;
 use App\Http\Controllers\Api\Vendor\StoreController;
@@ -18,7 +19,7 @@ Route::prefix('vendor')->group(function () {
     });
 
 
-    Route::prefix('services')->controller(ServiceController::class)->group(function () {
+    Route::middleware('is_subscribed')->prefix('services')->controller(ServiceController::class)->group(function () {
         Route::get('/services-of-vendor', 'index');
         // Route::get('/all-services', 'getAllServices')->withoutMiddleware('is_vendor');
         Route::post('/store', 'store');
@@ -28,7 +29,7 @@ Route::prefix('vendor')->group(function () {
     });
 
 
-    Route::prefix('product')->controller(ProductController::class)->group(function () {
+    Route::middleware('is_subscribed')->prefix('product')->controller(ProductController::class)->group(function () {
         Route::get('/products-of-vendor', 'index');
         // Route::get('/all-products', 'getAllProducts')->withoutMiddleware('is_vendor');
         Route::post('/store', 'store');
@@ -42,5 +43,9 @@ Route::prefix('vendor')->group(function () {
         Route::post('/subscribe', 'subscribe');
         Route::post('/cancel-subscription', 'cancelSubscription');
         Route::post('/resume-subscription', 'resumeSubscription');
+    });
+
+    Route::prefix('plan')->controller(PlanController::class)->group(function () {
+        Route::get('/all-plans', 'index');
     });
 });
