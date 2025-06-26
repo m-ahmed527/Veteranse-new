@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('stripe_customer_id')->nullable()->comment('Stripe customer ID');
             $table->string('stripe_subscription_id')->nullable()->comment('Stripe subscription ID');
             $table->string('subscription_status')->nullable()->comment('subscription status'); // active, canceled, trialing
+            $table->string('stripe_payment_status')->nullable()->comment('Payment status (e.g., paid, incopmplete, failed)');
+            $table->string('stripe_payment_type')->nullable()->comment('Payment method used for the subscription (e.g., card, wallet)');
             $table->timestamp('subscription_started_at')->nullable()->comment('Subscription start date');
             $table->timestamp('subscription_ends_at')->nullable()->comment('Subscription end date');
         });

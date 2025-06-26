@@ -111,4 +111,43 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Plan::class);
     }
+
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(WalletTransaction::class);
+    }
+
+
+
+    /**
+     * Add balance to wallet
+     */
+    public function creditWallet($amount, $reason = null)
+    {
+        $this->increment('wallet_balance', $amount);
+
+        $this->walletTransactions()->create([
+            'amount' => $amount,
+            'type' => 'credit',
+            'reason' => $reason,
+        ]);
+    }
+
+    /**
+     * Subtract balance from wallet
+     */
+    public function debitWallet($amount, $reason = null)
+    {
+        if ($this->wallet_balance < $amount) {
+            throw new \Exception('Insufficient wallet balance');
+        }
+
+        $this->decrement('wallet_balance', $amount);
+
+        $this->walletTransactions()->create([
+            'amount' => $amount,
+            'type' => 'debit',
+            'reason' => $reason,
+        ]);
+    }
 }
