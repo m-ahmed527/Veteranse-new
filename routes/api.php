@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/user', function (Request $request) {
     try {
         $user = $request->user()->fresh();
+        $user->load('walletTransactions');
         return responseSuccess('User found successfully', $user);
     } catch (\Exception $e) {
         return responseError('Something went wrong', 500);
