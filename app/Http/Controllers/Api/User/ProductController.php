@@ -14,13 +14,11 @@ class ProductController extends Controller
     public function getAllProducts()
     {
         try {
-            $products = Product::with(['category', 'user'])->get();
-            // $query = $products->filter([
-            //     CategoryFilter::class,
-            //     PriceFilter::class,
+            $products = Product::with(['category', 'user'])->filter([
+                CategoryFilter::class,
+                PriceFilter::class,
+            ])->paginate(10);
 
-            // ]);
-            // dd($query->get());
             return responseSuccess('Products retrieved successfully', $products);
         } catch (\Exception $e) {
             return responseError($e->getMessage(), 400);

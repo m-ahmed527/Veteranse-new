@@ -9,6 +9,7 @@ trait Filter
 {
     public function scopeFilter(Builder $query, $filters = [])
     {
+        // dd($filters);
         return app(Pipeline::class)
             ->send($query)
             ->through($filters)

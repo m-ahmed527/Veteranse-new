@@ -12,8 +12,8 @@ class AddOnFilter
     public function handle($query, Closure $next)
     {
 
-        // // Apply price range filter
-        if (request()->has('add_on') && request()->has('max_price')) {
+        // Apply price range filter
+        if (request()->has('add_on')) {
             $query->whereHas('addOns', function ($q) {
                 $q->where('name', "like", "%" . request('add_on') . "%");
             });

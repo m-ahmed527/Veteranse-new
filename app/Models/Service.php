@@ -12,6 +12,7 @@ class Service extends Model
 {
     use Filter;
     protected $guarded = ['id'];
+    protected $appends = ['type'];
 
     protected $hidden = [
         'category_id',
@@ -20,6 +21,13 @@ class Service extends Model
     protected $casts = [
         'image' => 'json',
     ];
+
+
+
+    public function getTypeAttribute()
+    {
+        return 'service'; // or 'service' in Service model
+    }
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

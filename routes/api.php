@@ -1,5 +1,7 @@
 <?php
 
+use App\Filters\CategoryFilter;
+use App\Filters\SearchFilter;
 use App\Http\Controllers\Admin\TaxController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Auth\EmailVerificationController;
@@ -13,6 +15,8 @@ use App\Http\Controllers\Api\User\ServiceController;
 use App\Http\Controllers\Api\User\WishlistController;
 use App\Http\Controllers\Api\Vendor\StripeWebhookController;
 use App\Models\Category;
+use App\Models\Product;
+use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,9 +24,9 @@ use Illuminate\Support\Facades\Route;
 
 
 
-// Route::get('/test', function (Request $request) {
-//     return "Hello, this is a test route!";
-// });
+Route::get('/test', function (Request $request) {
+    return "Hello, this is a test route!";
+});
 
 
 Route::get('/user', function (Request $request) {
@@ -105,5 +109,26 @@ Route::middleware('auth:sanctum')->prefix('tax')->controller(TaxController::clas
 });
 
 
+Route::get('/search', function (Request $request) {
+    try {
+        // dd($request->all());
+        $filters = [
+            SearchFilter::class,
+        ];
+
+        $products = Product::with(['category'])->filter($filters)->get();
+
+        $services = Service::with(['category', 'addOns'])->filter($filters)->get();
+
+        $results = $products->merge($services);
+        // dd($results);
+        if ($results->isEmpty()) {
+            return responseError('No results found', 404);
+        }
+        return responseSuccess('Search results retrieved successfully', $results);
+    } catch (\Exception $e) {
+        return responseError('Something went wrong', 500);
+    }
+});
 
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);

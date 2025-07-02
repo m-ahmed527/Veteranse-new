@@ -45,7 +45,7 @@ class BookingController extends Controller
     protected function bindAddOnsToBooking($request, $booking, $data)
     {
         $service = Service::find($request->service_id);
-        $total = $data['base_price'] + 20; // Base price + tax
+        $total = $data['base_price'] + getTaxRate(); // Base price + tax
         foreach ($request->add_ons as $addOnId) {
             // $addOn = AddOn::find($addOnId);
             $addOn = $service->addOns()->where('add_on_id', $addOnId)->first();
@@ -88,8 +88,8 @@ class BookingController extends Controller
             'booking_date' => ['required', new FutureBookingTime], // Custom validation for future date-time
         ]);
         $service = Service::find($request->service_id);
-        $tax = Tax::where('name', 'plateform tax')->where('is_active', true)->first();
-        $basePrice = $service->price;
+        $tax = getTax();
+        $basePrice = $service->discounted_price ?? $service->price; // Use discounted price if available, otherwise use regular price
         $data = [
             'user_id' => auth()->id(),
             'service_id' => $service->id,

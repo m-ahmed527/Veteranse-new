@@ -14,13 +14,11 @@ class ServiceController extends Controller
     public function getAllServices()
     {
         try {
-            $services = Service::with(['category', 'addOns', 'user'])->get();
-            // $query = $services->filter([
-            //     PriceFilter::class,
-            //     CategoryFilter::class,
-            //     AddOnFilter::class
-            // ]);
-            // dd($query->get());
+            $services = Service::with(['category', 'addOns', 'user'])->filter([
+                PriceFilter::class,
+                CategoryFilter::class,
+                AddOnFilter::class
+            ])->paginate(10);
             return responseSuccess('Services retrieved successfully', $services);
         } catch (\Exception $e) {
             return responseError($e->getMessage(), 400);

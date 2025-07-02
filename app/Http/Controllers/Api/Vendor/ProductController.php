@@ -16,7 +16,7 @@ class ProductController extends Controller
     public function index()
     {
         try {
-            $products = auth()->user()->products()->with('category')->get();
+            $products = auth()->user()->products()->with('category')->paginate(10);
             return responseSuccess('Products retrieved successfully', $products);
         } catch (\Exception $e) {
             return responseError($e->getMessage(), 400);
@@ -98,6 +98,7 @@ class ProductController extends Controller
             'company' => 'required|string|max:255',
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
+            'color' => 'nullable|string', // Optional color field
             'status' => 'required|boolean',
             'image' => 'sometimes|required|array',
             'image.*' => 'sometimes|required|image', // Allow multiple images
@@ -114,6 +115,7 @@ class ProductController extends Controller
             'company' => $request->company ?? $product->company,
             'description' => $request->description ?? $product->description,
             'price' => $request->price ?? $product->price,
+            'color' => $request->color ?? $product->color, // Optional color field
             'status' => $request->status ?? $product->status,
         ];
         if ($request->hasFile('image')) {

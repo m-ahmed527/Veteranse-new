@@ -18,22 +18,12 @@ class ServiceController extends Controller
     public function index()
     {
         try {
-            $services = auth()->user()->services()->with(['category', 'addOns'])->get();
+            $services = auth()->user()->services()->with(['category', 'addOns'])->paginate(10);
             return responseSuccess('Services retrieved successfully', $services);
         } catch (\Exception $e) {
             return responseError($e->getMessage(), 400);
         }
     }
-    public function getAllServices()
-    {
-        try {
-            $services = Service::with(['category', 'addOns', 'user'])->get();
-            return responseSuccess('Services retrieved successfully', $services);
-        } catch (\Exception $e) {
-            return responseError($e->getMessage(), 400);
-        }
-    }
-
 
     /**
      * Store a newly created resource in storage.
@@ -115,40 +105,41 @@ class ServiceController extends Controller
 
     protected function sanitizedRequest(Request $request, $vendor): array
     {
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'category_id' => 'required|exists:categories,id',
-                'name' => 'required|string',
-                'company' => 'nullable|string',
-                'description' => 'required|string',
-                'price' => 'required|numeric',
-                'status' => 'required|boolean',
-                'image' => 'required|array',
-                'image.*' => 'required|image', // Assuming image is an array of images
-                'add_ons' => 'nullable|array',
-                'add_ons.*' => 'exists:add_ons,id',
-                'add_on_price' => 'nullable|array',
-                'add_on_price.*' => 'numeric|min:0',
-            ],
-            [
-                'category_id.required' => 'Category is required',
-                'category_id.exists' => 'Category does not exist',
-                'status.boolean' => 'Status must be 1 or 0',
-            ]
-        );
-        // Custom logic: if add_ons is present, add_on_price becomes required
-        $validator->sometimes('add_on_price', 'required|array', function ($input) {
-            return !empty($input->add_ons);
-        });
+        // $validator = Validator::make(
+        //     $request->all(),
+        //     [
+        //         'category_id' => 'required|exists:categories,id',
+        //         'name' => 'required|string',
+        //         'company' => 'nullable|string',
+        //         'description' => 'required|string',
+        //         'price' => 'required|numeric',
+        //         'discounted_price' => 'required|numeric|min:0',
+        //         'status' => 'required|boolean',
+        //         'image' => 'required|array',
+        //         'image.*' => 'required|image', // Assuming image is an array of images
+        //         'add_ons' => 'nullable|array',
+        //         'add_ons.*' => 'exists:add_ons,id',
+        //         'add_on_price' => 'nullable|array',
+        //         'add_on_price.*' => 'numeric|min:0',
+        //     ],
+        //     [
+        //         'category_id.required' => 'Category is required',
+        //         'category_id.exists' => 'Category does not exist',
+        //         'status.boolean' => 'Status must be 1 or 0',
+        //     ]
+        // );
+        // // Custom logic: if add_ons is present, add_on_price becomes required
+        // $validator->sometimes('add_on_price', 'required|array', function ($input) {
+        //     return !empty($input->add_ons);
+        // });
 
-        $validator->sometimes('add_on_price.*', 'required|numeric|min:0', function ($input) {
-            return !empty($input->add_ons);
-        });
+        // $validator->sometimes('add_on_price.*', 'required|numeric|min:0', function ($input) {
+        //     return !empty($input->add_ons);
+        // });
 
-        $validator->validate();
+        // $validator->validate();
 
-
+        $this->validateRequest($request);
         $data = [
             'category_id' => $request->category_id,
             'name' => $request->name,
@@ -171,6 +162,65 @@ class ServiceController extends Controller
 
     public function sanitizedUpdateRequest(Request $request, Service $service): array
     {
+        // $validator = Validator::make(
+        //     $request->all(),
+        //     [
+        //         'category_id' => 'required|exists:categories,id',
+        //         'name' => 'required|string',
+        //         'company' => 'nullable|string',
+        //         'description' => 'required|string',
+        //         'price' => 'required|numeric',
+        //         'discounted_price' => 'required|numeric|min:0',
+        //         'status' => 'required|boolean',
+        //         'image' => 'nullable|array',
+        //         'image.*' => 'nullable|image', // Assuming image is an array of images
+        //         'add_ons' => 'nullable|array',
+        //         'add_ons.*' => 'exists:add_ons,id',
+        //         'add_on_price' => 'nullable|array',
+        //         'add_on_price.*' => 'numeric|min:0',
+        //     ],
+        //     [
+        //         'category_id.required' => 'Category is required',
+        //         'category_id.exists' => 'Category does not exist',
+        //         'status.boolean' => 'Status must be 1 or 0',
+        //     ]
+        // );
+
+        // // Custom logic: if add_ons is present, add_on_price becomes required
+        // $validator->sometimes('add_on_price', 'required|array', function ($input) {
+        //     return !empty($input->add_ons);
+        // });
+
+        // $validator->sometimes('add_on_price.*', 'required|numeric|min:0', function ($input) {
+        //     return !empty($input->add_ons);
+        // });
+
+        // $validator->validate();
+
+        $this->validateRequest($request);
+
+        $data = [
+            'category_id' => $request->category_id ?? $service->category_id,
+            'name' => $request->name ?? $service->name,
+            'company' => $request->company ?? $service->company,
+            'description' => $request->description ?? $service->description,
+            'price' => $request->price ?? $service->price,
+            'discounted_price' => $request->discounted_price ?? $service->discounted_price,
+            'status' => $request->status ?? $service->status,
+        ];
+        if ($request->hasFile('image')) {
+            $images = [];
+            foreach ($request->file('image') as $key => $image) {
+                $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $image->move(public_path('vendor/services/images'), $imageName);
+                $images[] = asset('vendor/services/images') . '/' . $imageName;
+            }
+            $data['image'] = $images;
+        }
+        return $data;
+    }
+    private function validateRequest(Request $request)
+    {
         $validator = Validator::make(
             $request->all(),
             [
@@ -179,9 +229,10 @@ class ServiceController extends Controller
                 'company' => 'nullable|string',
                 'description' => 'required|string',
                 'price' => 'required|numeric',
+                'discounted_price' => 'required|numeric|min:0',
                 'status' => 'required|boolean',
-                'image' => 'nullable|array',
-                'image.*' => 'nullable|image', // Assuming image is an array of images
+                'image' => 'required|array',
+                'image.*' => 'required|image', // Assuming image is an array of images
                 'add_ons' => 'nullable|array',
                 'add_ons.*' => 'exists:add_ons,id',
                 'add_on_price' => 'nullable|array',
@@ -204,27 +255,7 @@ class ServiceController extends Controller
         });
 
         $validator->validate();
-
-        $data = [
-            'category_id' => $request->category_id ?? $service->category_id,
-            'name' => $request->name ?? $service->name,
-            'company' => $request->company ?? $service->company,
-            'description' => $request->description ?? $service->description,
-            'price' => $request->price ?? $service->price,
-            'status' => $request->status ?? $service->status,
-        ];
-        if ($request->hasFile('image')) {
-            $images = [];
-            foreach ($request->file('image') as $key => $image) {
-                $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-                $image->move(public_path('vendor/services/images'), $imageName);
-                $images[] = asset('vendor/services/images') . '/' . $imageName;
-            }
-            $data['image'] = $images;
-        }
-        return $data;
     }
-
     protected function prepareAddOns($request)
     {
         // Step 2: Attach add-ons with pivot data

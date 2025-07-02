@@ -11,11 +11,16 @@ class Product extends Model
 {
     use Filter;
     protected $guarded = ['id'];
+    protected $appends = ['type'];
+
 
     protected $casts = [
         'image' => 'json'
     ];
-
+    public function getTypeAttribute()
+    {
+        return 'product'; // or 'service' in Service model
+    }
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
