@@ -17,12 +17,10 @@ use App\Http\Controllers\Api\Vendor\StripeWebhookController;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Service;
+use App\Models\StripeAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
-
-
-
+use Stripe\Account;
 
 Route::get('/test', function (Request $request) {
     return "Hello, this is a test route!";
@@ -32,7 +30,7 @@ Route::get('/test', function (Request $request) {
 Route::get('/user', function (Request $request) {
     try {
         $user = $request->user()->fresh();
-        $user->load('walletTransactions');
+        $user->load('stripeAccount', 'walletTransactions');
         return responseSuccess('User found successfully', $user);
     } catch (\Exception $e) {
         return responseError('Something went wrong', 500);

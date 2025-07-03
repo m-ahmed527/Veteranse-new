@@ -88,13 +88,14 @@ class BookingController extends Controller
             'booking_date' => ['required', new FutureBookingTime], // Custom validation for future date-time
         ]);
         $service = Service::find($request->service_id);
+        $vendorId = $service->user_id; //the service has a user_id field for the vendor
         $tax = getTax();
         $basePrice = $service->discounted_price ?? $service->price; // Use discounted price if available, otherwise use regular price
         $data = [
             'user_id' => auth()->id(),
             'service_id' => $service->id,
             'service_name' => $service->name,
-            // 'vendor_id' => $vendorId,
+            'vendor_id' => $vendorId,
             'booking_date' => $request->booking_date,
             'booking_time_from' => $request->booking_time_from ?? null,
             'booking_time_to' => $request->booking_time_to ?? null,

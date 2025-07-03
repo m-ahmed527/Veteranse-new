@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
+use Stripe\Account;
 
 class AuthController extends Controller
 {
@@ -114,6 +115,10 @@ class AuthController extends Controller
                 'status' => 1,
             ]);
             $token = $user->createToken('API-token')->plainTextToken;
+
+            if ($user->role == 'vendor') {
+                getOrCreateStripeAccount($user);
+            }
             DB::commit();
             $user->fresh();
             $user['token'] = $token;

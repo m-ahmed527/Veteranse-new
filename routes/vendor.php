@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Vendor\PlanController;
 use App\Http\Controllers\Api\Vendor\ProductController;
 use App\Http\Controllers\Api\Vendor\ServiceController;
 use App\Http\Controllers\Api\Vendor\StoreController;
+use App\Http\Controllers\Api\Vendor\StripeAccountController;
 use App\Http\Controllers\Api\Vendor\SubscriptionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -47,5 +48,10 @@ Route::prefix('vendor')->group(function () {
 
     Route::prefix('plan')->controller(PlanController::class)->group(function () {
         Route::get('/all-plans', 'index');
+    });
+
+    Route::prefix('stripe-account')->controller(StripeAccountController::class)->group(function () {
+        Route::get('/connect', 'startOnBoardProcess');
+        Route::get('/connect/{account_id}/return', 'returnFromOnBoardProcess')->withoutMiddleware(['auth:sanctum', 'is_vendor']);
     });
 });

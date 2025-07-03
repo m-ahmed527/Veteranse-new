@@ -117,7 +117,10 @@ class User extends Authenticatable
         return $this->hasMany(WalletTransaction::class);
     }
 
-
+    public function stripeAccount(): HasOne
+    {
+        return $this->hasOne(StripeAccount::class);
+    }
 
     /**
      * Add balance to wallet
