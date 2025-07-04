@@ -122,7 +122,7 @@ class AuthController extends Controller
             DB::commit();
             $user->fresh();
             $user['token'] = $token;
-            return responseSuccess('User verified successfully.', $user);
+            return responseSuccess(ucfirst($user->role) . " verified successfully.", $user);
         } catch (\Exception $e) {
             DB::rollBack();
             return responseError($e->getMessage(), 400);

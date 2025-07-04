@@ -87,7 +87,7 @@ class SubscriptionController extends Controller
         try {
             $user = auth()->user();
 
-            if (!$user->stripe_subscription_id && $user->subscription_status != 'active') {
+            if (!$user->stripe_subscription_id && $user?->subscription_status != 'active') {
                 return responseError('No active subscription found to cancel.', 400);
             }
             if (!$user->stripe_subscription_id) {
@@ -184,7 +184,7 @@ class SubscriptionController extends Controller
         $user->subscription_status = $subscription?->status ?? 'active';                         // e.g. 'incomplete', 'active'
         $user->subscription_started_at = now();                                     // You may also fetch from Stripe if needed
         $user->subscription_ends_at = null;                                         // Will be updated via webhook
-        $user->has_subscribed = true;                                               // Custom field to track that user has subscribed
+        $user->has_subscribed = 1;                                               // Custom field to track that user has subscribed
         $user->stripe_payment_type = $paymentType;                                       // e.g. 'card', 'wallet', 'free'
         if ($paymentType == 'card') {
             $user->subscription_renew_at = $subscription?->items?->data[0]?->current_period_end ? now()->timestamp($subscription?->items?->data[0]->current_period_end) : null;
@@ -201,10 +201,10 @@ class SubscriptionController extends Controller
     }
     private function cancelFreeOrWalletSubscription($user)
     {
-        $user->subscription_status = 'canceled';
+        $user->subscription_status = null;
         $user->subscription_ends_at = now();
         $user->stripe_subscription_id = null; // Clear subscription ID
-        $user->has_subscribed = false; // Reset subscription flag
+        $user->has_subscribed = 0; // Reset subscription flag
         $user->save();
     }
 
@@ -226,13 +226,19 @@ class SubscriptionController extends Controller
                 $user->creditWallet($amount, 'Refund for subscription cancellation (within 7 days)');
                 $user->stripe_payment_status = 'wallet_refunded';
             }
-
-            $user->subscription_status = 'canceled';
+            $user->stripe_payment_intent = null; // Clear payment intent
+            $user->plan_id = null; // Clear plan ID
+            $user->subscription_plan = null; // Clear plan name
+            $user->stripe_price = null; // Clear Stripe price ID
+            $user->stripe_subscription_id = null; // Clear subscription ID
+            $user->subscription_status = null;
+            // $user->subscription_ends_at = now(); // Set end date to now
         } else {
             // ✅ Cancel at period end
             $subscription->cancel();
             $user->subscription_status = 'canceled';
         }
+        $user->has_subscribed = 0; // Reset subscription flag
         $user->save();
     }
 }

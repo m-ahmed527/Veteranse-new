@@ -95,12 +95,25 @@ function createAccountLink($accountId, $config = [])
     return  $account_links;
 }
 
-function getStripeAccount($vendorId)
+function getStripeAccount($accountId)
 {
     setStripeKey();
-    $account = Account::retrieve($vendorId);
+    $account = Account::retrieve($accountId);
     if ($account) {
         return $account;
     }
     return null;
+}
+
+
+
+function deleteStripeAccount($accountId)
+{
+    setStripeKey();
+    $account = getStripeAccount($accountId);
+    if ($account) {
+        $account->delete();
+        return true;
+    }
+    return false;
 }

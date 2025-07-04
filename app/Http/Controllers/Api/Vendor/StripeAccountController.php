@@ -55,4 +55,35 @@ class StripeAccountController extends Controller
             return responseError($e->getMessage(), 400);
         }
     }
+
+    /**
+     * Delete a Stripe account.
+     *
+     * @param string $account_id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function deleteStripeAccount($account_id)
+    {
+        try {
+            $user = auth()->user();
+            $account = StripeAccount::where("stripe_account_id", $account_id)->first();
+            if (!$account) {
+                return responseError('Stripe account not found.', 404);
+            }
+            $delete = deleteStripeAccount($account->stripe_account_id);
+            if ($delete) {
+                DB::beginTransaction();
+                $account->user()->update([
+                    'stripe_account_connected' => false,
+                ]);
+                $account->delete();
+
+                DB::commit();
+            }
+            return responseSuccess('Stripe account deleted successfully.', $user->load('stripeAccount'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return responseError($e->getMessage(), 400);
+        }
+    }
 }

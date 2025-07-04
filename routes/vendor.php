@@ -53,5 +53,6 @@ Route::prefix('vendor')->group(function () {
     Route::prefix('stripe-account')->controller(StripeAccountController::class)->group(function () {
         Route::get('/connect', 'startOnBoardProcess');
         Route::get('/connect/{account_id}/return', 'returnFromOnBoardProcess')->withoutMiddleware(['auth:sanctum', 'is_vendor']);
+        Route::post('/connect/delete-account/{account_id}', 'deleteStripeAccount');
     });
 });
