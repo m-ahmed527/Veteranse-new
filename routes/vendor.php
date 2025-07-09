@@ -48,6 +48,7 @@ Route::prefix('vendor')->group(function () {
 
     Route::prefix('plan')->controller(PlanController::class)->group(function () {
         Route::get('/all-plans', 'index');
+        Route::post('/store', 'store');
     });
 
     Route::prefix('stripe-account')->controller(StripeAccountController::class)->group(function () {

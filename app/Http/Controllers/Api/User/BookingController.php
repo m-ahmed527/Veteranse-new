@@ -11,6 +11,9 @@ use App\Rules\AddOnForService;
 use App\Rules\FutureBookingTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Stripe\Customer;
+use Stripe\PaymentIntent;
+use Stripe\PaymentMethod;
 
 class BookingController extends Controller
 {
@@ -27,8 +30,22 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         try {
+            $user = auth()->user();
             $data = $this->sanitizedRequest($request);
-            // $vendorId = $service->user_id;
+            // setStripeKey();
+            // if (!$user->stripe_customer_id) {
+            //     $customer = createStripeCustomer($user);
+            //     $user->stripe_customer_id = $customer->id;
+            //     $user->save();
+            // }
+
+            // $paymentMethod = attachPaymentMethodToCustomer($request->payment_method_id, $user);
+
+            // $paymentIntent = createPaymentIntent($request, 40,  $user, [
+            //     'user_id' => $user->id,
+            //     'service_id' => $data['service_id'],
+            // ]);
+
             DB::beginTransaction();
             $booking = Booking::create($data);
             if ($request->add_ons) {
