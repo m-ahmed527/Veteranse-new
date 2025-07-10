@@ -158,7 +158,7 @@ function updateStripeCustomer($user, $paymentMethod)
     ]);
 }
 
-function createPaymentIntent($request, $amount,$user, $metaData = [])
+function createPaymentIntent($request, $amount, $user, $description = 'Booking', $metaData = [])
 {
     $paymentIntent = PaymentIntent::create([
         'amount' => $amount * 100,
@@ -168,7 +168,7 @@ function createPaymentIntent($request, $amount,$user, $metaData = [])
             'allow_redirects' => 'never',
         ],
         'payment_method' => $request->payment_method_id,
-        // 'confirmation_method' => 'automatic',
+        'description' => $description,
         'confirm' => true,
         'customer' => $user->stripe_customer_id ?? null,
         'metadata' => $metaData,

@@ -87,7 +87,7 @@ class SubscriptionController extends Controller
         try {
             $user = auth()->user();
 
-            if (!$user->stripe_subscription_id && $user?->subscription_status != 'active') {
+            if (!$user?->subscription_status || $user?->subscription_status != 'active') {
                 return responseError('No active subscription found to cancel.', 400);
             }
             if (!$user->stripe_subscription_id) {
@@ -105,7 +105,9 @@ class SubscriptionController extends Controller
 
             // ✅ Check if within 7 days of subscription start
             $startedAt = Carbon::parse($user->subscription_started_at);
+
             $diffDays = $startedAt->diffInRealDays(now());
+            // dd($diffDays <= 7, $startedAt, now(), $diffDays);
             DB::beginTransaction();
             $this->cancelPaidSubscription($diffDays, $subscription, $user);
             DB::commit();
@@ -202,8 +204,12 @@ class SubscriptionController extends Controller
     private function cancelFreeOrWalletSubscription($user)
     {
         $user->subscription_status = null;
+        $user->stripe_payment_intent = null; // Clear payment intent
+        $user->plan_id = null; // Clear plan ID
+        $user->subscription_plan = null; // Clear plan name
+        $user->stripe_price = null; // Clear Stripe price ID
         $user->subscription_ends_at = now();
-        $user->stripe_subscription_id = null; // Clear subscription ID
+        // $user->stripe_subscription_id = null; // Clear subscription ID
         $user->has_subscribed = 0; // Reset subscription flag
         $user->save();
     }
@@ -212,6 +218,7 @@ class SubscriptionController extends Controller
     {
 
         if ($diffDays <= 7) {
+            dd($diffDays <= 7);
             // ✅ Cancel immediately
             $subscription->cancel(['invoice_now' => true, 'prorate' => false]);
 
@@ -230,12 +237,14 @@ class SubscriptionController extends Controller
             $user->plan_id = null; // Clear plan ID
             $user->subscription_plan = null; // Clear plan name
             $user->stripe_price = null; // Clear Stripe price ID
-            $user->stripe_subscription_id = null; // Clear subscription ID
             $user->subscription_status = null;
             // $user->subscription_ends_at = now(); // Set end date to now
         } else {
             // ✅ Cancel at period end
-            $subscription->cancel();
+            // $subscription->cancel();
+            Subscription::update($subscription->id, [
+                'cancel_at_period_end' => true,
+            ]);
             $user->subscription_status = 'canceled';
         }
         $user->has_subscribed = 0; // Reset subscription flag

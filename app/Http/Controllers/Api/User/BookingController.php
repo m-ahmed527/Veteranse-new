@@ -32,20 +32,21 @@ class BookingController extends Controller
         try {
             $user = auth()->user();
             $data = $this->sanitizedRequest($request);
-            // setStripeKey();
-            // if (!$user->stripe_customer_id) {
-            //     $customer = createStripeCustomer($user);
-            //     $user->stripe_customer_id = $customer->id;
-            //     $user->save();
-            // }
+            setStripeKey();
+            if (!$user->stripe_customer_id) {
+                $customer = createStripeCustomer($user);
+                $user->stripe_customer_id = $customer->id;
+                $user->save();
+            }
 
-            // $paymentMethod = attachPaymentMethodToCustomer($request->payment_method_id, $user);
+            $paymentMethod = attachPaymentMethodToCustomer($request->payment_method_id, $user);
 
-            // $paymentIntent = createPaymentIntent($request, 40,  $user, [
-            //     'user_id' => $user->id,
-            //     'service_id' => $data['service_id'],
-            // ]);
-
+            $paymentIntent = createPaymentIntent($request, 10,  $user, 'Booking', [
+                'user_id' => $user->id,
+                'service_id' => $data['service_id'],
+            ]);
+            $data['payment_intent'] = $paymentIntent->id;
+            $data['payment_method'] = $paymentMethod->id;
             DB::beginTransaction();
             $booking = Booking::create($data);
             if ($request->add_ons) {
