@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\User\AddOnController;
 use App\Http\Controllers\Api\User\BookingController;
 use App\Http\Controllers\Api\User\CartController;
 use App\Http\Controllers\Api\User\CategoryController;
+use App\Http\Controllers\Api\User\OrderController;
 use App\Http\Controllers\Api\User\ProductController;
 use App\Http\Controllers\Api\User\ProfileController;
 use App\Http\Controllers\Api\User\ServiceController;
@@ -106,6 +107,9 @@ Route::middleware('auth:sanctum')->prefix('tax')->controller(TaxController::clas
     Route::delete('/delete-tax/{id}', 'destroy');
 });
 
+Route::middleware('auth:sanctum')->prefix('order')->controller(OrderController::class)->group(function () {
+    Route::post('/make-order', 'store');
+});
 
 Route::get('/search', function (Request $request) {
     try {

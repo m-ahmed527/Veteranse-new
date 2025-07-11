@@ -54,7 +54,7 @@ class CartController extends Controller
                 $q->where('product_id', $product->id)->with('category');
             }]);
             DB::commit();
-            return responseSuccess('Product added to cart', $cartProduct);
+            return responseSuccess('Product added to cart', $cart->load('products.category'));
         } catch (\Exception $e) {
             DB::rollBack();
             return responseError($e->getMessage(), 400);
@@ -77,7 +77,7 @@ class CartController extends Controller
                 if (!$cart->products()->exists()) {
                     return responseSuccess('Your Cart is Empty Now');
                 }
-                return responseSuccess('Product removed from cart');
+                return responseSuccess('Product removed from cart', $cart->load('products.category'));
             } else {
                 return responseError('Product not found in cart', 404);
             }

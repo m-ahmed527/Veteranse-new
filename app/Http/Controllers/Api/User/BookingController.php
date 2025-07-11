@@ -31,7 +31,10 @@ class BookingController extends Controller
     {
         try {
             $user = auth()->user();
-            $data = $this->sanitizedRequest($request);
+            $service = Service::find($request->service_id);
+            $vendor = $service->user; //the service has a user_id field for the vendor
+            $data = $this->sanitizedRequest($request, $service, $vendor);
+
             setStripeKey();
             if (!$user->stripe_customer_id) {
                 $customer = createStripeCustomer($user);
@@ -50,7 +53,7 @@ class BookingController extends Controller
             DB::beginTransaction();
             $booking = Booking::create($data);
             if ($request->add_ons) {
-                $this->bindAddOnsToBooking($request, $booking, $data);
+                $this->bindAddOnsToBooking($request, $booking, $data, $service, $vendor);
             }
             DB::commit();
             return responseSuccess('Now Please make payment to confirm your booking', $booking->load(['service', 'addOns']));
@@ -60,10 +63,12 @@ class BookingController extends Controller
         }
     }
 
-    protected function bindAddOnsToBooking($request, $booking, $data)
+    protected function bindAddOnsToBooking($request, $booking, $data, $service = null, $vendor = null)
     {
-        $service = Service::find($request->service_id);
-        $total = $data['base_price'] + getTaxRate(); // Base price + tax
+
+        $tax = getTax();
+
+        $total = $data['base_price'];
         foreach ($request->add_ons as $addOnId) {
             // $addOn = AddOn::find($addOnId);
             $addOn = $service->addOns()->where('add_on_id', $addOnId)->first();
@@ -74,10 +79,16 @@ class BookingController extends Controller
             ]);
             $total += $addOn->pivot->add_on_price;
         }
-        $booking->update(['total_price' => $total]);
+        $taxPrice = $vendor->has_subscribed ? 0 : $tax->taxAmount($total);
+        $vendorCut = $total - $taxPrice;
+        $booking->update([
+            'total_price' => $total,
+            'tax_price' => $taxPrice,
+            'vendor_cut' => $vendorCut,
+        ]);
     }
 
-    protected function sanitizedRequest(Request $request)
+    protected function sanitizedRequest(Request $request, $service = null, $vendor = null)
     {
         $request->validate([
             'service_id' => 'required|exists:services,id',
@@ -105,23 +116,21 @@ class BookingController extends Controller
         $request->validate([
             'booking_date' => ['required', new FutureBookingTime], // Custom validation for future date-time
         ]);
-        $service = Service::find($request->service_id);
-        $vendorId = $service->user_id; //the service has a user_id field for the vendor
-        $tax = getTax();
+
         $basePrice = $service->discounted_price ?? $service->price; // Use discounted price if available, otherwise use regular price
         $data = [
             'user_id' => auth()->id(),
             'service_id' => $service->id,
             'service_name' => $service->name,
-            'vendor_id' => $vendorId,
+            'vendor_id' => $vendor->id,
             'booking_date' => $request->booking_date,
             'booking_time_from' => $request->booking_time_from ?? null,
             'booking_time_to' => $request->booking_time_to ?? null,
             'base_price' => $basePrice,
-            'tax_price' => $tax->taxAmount($basePrice), // Assuming a fixed tax price for simplicity
+            // 'tax_price' => $vendor->has_subscribed ? 0 : $tax->taxAmount($basePrice), // Assuming a fixed tax price for simplicity
             'total_price' => $basePrice,
             'booking_status' => 'pending',
-            'payment_status' => 'unpaid',
+            'payment_status' => 'pending',
         ];
         return $data;
     }

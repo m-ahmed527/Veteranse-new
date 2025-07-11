@@ -122,6 +122,11 @@ class User extends Authenticatable
         return $this->hasOne(StripeAccount::class);
     }
 
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
     /**
      * Add balance to wallet
      */

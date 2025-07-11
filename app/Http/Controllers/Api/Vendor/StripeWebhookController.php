@@ -142,14 +142,25 @@ class StripeWebhookController extends Controller
     protected function handlePaymentIntentEvent($data)
     {
         $user = User::where('stripe_customer_id', $data->customer)->first();
-        $booking = $user->bookings()->where('payment_intent', $data->id)->first();
-        if (!$user || !$booking) return;
+        if ($data->description == 'Booking') {
+            $booking = $user->bookings()->where('payment_intent', $data->id)->first();
+            if (!$user || !$booking) return;
 
-        if ($data->status == 'succeeded') {
-            $booking->update([
-                'payment_status' => $data->status,
-                'booking_status' => 'confirmed',
-            ]);
+            if ($data->status == 'succeeded') {
+                $booking->update([
+                    'payment_status' => $data->status,
+                    'booking_status' => 'confirmed',
+                ]);
+            }
+        } elseif ($data->description == 'Product') {
+            $order = $user->orders()->where('payment_intent', $data->id)->first();
+            if (!$user || !$order) return;
+            if ($data->status == 'succeeded') {
+                $order->update([
+                    'payment_status' => $data->status,
+                    'order_status' => 'placed',
+                ]);
+            }
         }
     }
 }

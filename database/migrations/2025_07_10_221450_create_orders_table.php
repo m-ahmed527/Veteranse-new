@@ -11,27 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bookings', function (Blueprint $table) {
+        Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-
-            $table->foreignId('service_id')->constrained()->onDelete('cascade');
-            $table->string('service_name')->nullable();
-            $table->date('booking_date')->nullable();
-            $table->time('booking_time_from')->nullable();
-            $table->time('booking_time_to')->nullable();
-            $table->float('base_price')->default(0);
-            $table->float('tax_price')->default(0);
-            $table->float('total_price')->default(0);
-            $table->string('booking_status')->default('pending');
-            $table->string('payment_status')->default('pending ');
+            $table->float('total_amount')->default(0);
+            $table->string('order_status')->default('pending');
+            $table->string('payment_status')->default('pending');
             $table->string('payment_method')->nullable();
             $table->string('payment_intent')->nullable();
             $table->string('address')->nullable();
             $table->string('city')->nullable();
-            $table->string('state')->nullable();
             $table->string('country')->nullable();
-            $table->string('phone')->nullable();
+            $table->string('state')->nullable();
             $table->string('zip_code')->nullable();
             $table->timestamps();
         });
@@ -42,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bookings');
+        Schema::dropIfExists('orders');
     }
 };

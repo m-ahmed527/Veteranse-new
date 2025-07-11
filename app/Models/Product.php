@@ -43,4 +43,11 @@ class Product extends Model
     {
         return $this->morphToMany(User::class, 'wishlistable', 'wishlists')->withTimestamps();
     }
+
+    public function orders()
+    {
+        return $this->belongsToMany(Order::class)
+            ->withPivot('product_price', 'quantity', 'total_price')
+            ->withTimestamps();
+    }
 }
