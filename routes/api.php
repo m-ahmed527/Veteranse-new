@@ -97,6 +97,7 @@ Route::middleware('auth:sanctum')->prefix('wishlist')->controller(WishlistContro
 Route::middleware('auth:sanctum')->prefix('booking')->controller(BookingController::class)->group(function () {
     Route::get('/get-bookings', 'index');
     Route::post('/make-booking', 'store');
+    Route::post('/make-booking-wallet', 'craeteBookingWithWallet');
 });
 
 Route::middleware('auth:sanctum')->prefix('tax')->controller(TaxController::class)->group(function () {
@@ -108,7 +109,9 @@ Route::middleware('auth:sanctum')->prefix('tax')->controller(TaxController::clas
 });
 
 Route::middleware('auth:sanctum')->prefix('order')->controller(OrderController::class)->group(function () {
+    Route::get('/get-orders', 'index');
     Route::post('/make-order', 'store');
+    Route::post('/make-order-wallet', 'craeteOrderWithWallet');
 });
 
 Route::get('/search', function (Request $request) {

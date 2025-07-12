@@ -47,7 +47,7 @@ class Product extends Model
     public function orders()
     {
         return $this->belongsToMany(Order::class)
-            ->withPivot('product_price', 'quantity', 'total_price')
+            ->withPivot('product_price', 'quantity', 'total_price', 'vendor_id', 'tax_price', 'vendor_cut')
             ->withTimestamps();
     }
 }

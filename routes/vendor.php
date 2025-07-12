@@ -42,6 +42,7 @@ Route::prefix('vendor')->group(function () {
 
     Route::prefix('subscription')->controller(SubscriptionController::class)->group(function () {
         Route::post('/subscribe', 'subscribe');
+        Route::post('/subscribe-wallet', 'subscribeWithWallet');
         Route::post('/cancel-subscription', 'cancelSubscription');
         Route::post('/resume-subscription', 'resumeSubscription');
     });

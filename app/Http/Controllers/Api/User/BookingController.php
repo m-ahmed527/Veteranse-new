@@ -56,13 +56,38 @@ class BookingController extends Controller
                 $this->bindAddOnsToBooking($request, $booking, $data, $service, $vendor);
             }
             DB::commit();
-            return responseSuccess('Now Please make payment to confirm your booking', $booking->load(['service', 'addOns']));
+            return responseSuccess('Booking created successfully', $booking->load(['service', 'addOns']));
         } catch (\Exception $e) {
             DB::rollBack();
             return responseError($e->getMessage(), 400);
         }
     }
 
+    public function craeteBookingWithWallet(Request $request)
+    {
+        try {
+            $user = auth()->user();
+            $service = Service::find($request->service_id);
+            $vendor = $service->user; //the service has a user_id field for the vendor
+            $data = $this->sanitizedRequest($request, $service, $vendor);
+
+            if ($user->wallet_balance < $data['total_price']) {
+                return responseError('Insufficient wallet balance for this booking,please use other payment method', 400);
+            }
+
+            DB::beginTransaction();
+            $booking = Booking::create($data);
+            if ($request->add_ons) {
+                $this->bindAddOnsToBooking($request, $booking, $data, $service, $vendor);
+            }
+            $user->debitWallet($data['total_price'], 'Booked a service: ' . $service->name);
+            DB::commit();
+            return responseSuccess('Booking created successfully', ['wallet_used' => true, 'booking' => $booking->load(['service', 'addOns'])]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return responseError($e->getMessage(), 400);
+        }
+    }
     protected function bindAddOnsToBooking($request, $booking, $data, $service = null, $vendor = null)
     {
 
@@ -91,6 +116,7 @@ class BookingController extends Controller
     protected function sanitizedRequest(Request $request, $service = null, $vendor = null)
     {
         $request->validate([
+            'payment_method_id' => 'sometimes|required|string',
             'service_id' => 'required|exists:services,id',
             'booking_date' => 'required|date|after_or_equal:today',
             'booking_time_from' => 'required|date_format:H:i',

@@ -48,15 +48,15 @@ class SubscriptionController extends Controller
             }
 
             // ✅ PAID PLAN — Try wallet first
-            if ($user->wallet_balance >= $plan->price) {
-                DB::beginTransaction();
-                $this->payWithWallet($user, $plan);
-                DB::commit();
-                return responseSuccess('Subscription activated using wallet.', [
-                    'wallet_used' => true,
-                    'user' => $user,
-                ]);
-            }
+            // if ($user->wallet_balance >= $plan->price) {
+            //     DB::beginTransaction();
+            //     $this->payWithWallet($user, $plan);
+            //     DB::commit();
+            //     return responseSuccess('Subscription activated using wallet.', [
+            //         'wallet_used' => true,
+            //         'user' => $user,
+            //     ]);
+            // }
 
             // ✅ INSUFFICIENT WALLET BALANCE — Use Stripe
             setStripeKey();
@@ -81,7 +81,37 @@ class SubscriptionController extends Controller
             return responseError($e->getMessage(), 400);
         }
     }
+    public function subscribeWithWallet(Request $request)
+    {
+        try {
+            $request->validate([
+                'plan_id' => 'required|exists:plans,id',
+            ]);
 
+            $user = auth()->user();
+            $plan = Plan::findOrFail($request->plan_id);
+
+            if ($user->has_subscribed && $user->subscription_status == 'active') {
+                return responseError('You are already subscribed to a plan.', 400);
+            }
+
+            if ($user->wallet_balance < $plan->price) {
+                return responseError('Insufficient wallet balance,please use other payment method.', 400);
+            }
+
+            DB::beginTransaction();
+            $this->payWithWallet($user, $plan);
+            DB::commit();
+
+            return responseSuccess('Subscription activated using wallet.', [
+                'wallet_used' => true,
+                'user' => $user,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return responseError($e->getMessage(), 400);
+        }
+    }
     public function cancelSubscription()
     {
         try {
@@ -107,7 +137,6 @@ class SubscriptionController extends Controller
             $startedAt = Carbon::parse($user->subscription_started_at);
 
             $diffDays = $startedAt->diffInRealDays(now());
-            // dd($diffDays <= 7, $startedAt, now(), $diffDays);
             DB::beginTransaction();
             $this->cancelPaidSubscription($diffDays, $subscription, $user);
             DB::commit();
@@ -218,7 +247,6 @@ class SubscriptionController extends Controller
     {
 
         if ($diffDays <= 7) {
-            dd($diffDays <= 7);
             // ✅ Cancel immediately
             $subscription->cancel(['invoice_now' => true, 'prorate' => false]);
 
