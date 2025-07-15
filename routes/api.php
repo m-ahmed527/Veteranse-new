@@ -95,6 +95,7 @@ Route::middleware('auth:sanctum')->prefix('wishlist')->controller(WishlistContro
 
 
 Route::middleware('auth:sanctum')->prefix('booking')->controller(BookingController::class)->group(function () {
+    Route::get('/get-all-bookings', 'getAllBookings');
     Route::get('/get-bookings', 'index');
     Route::post('/make-booking', 'store');
     Route::post('/make-booking-wallet', 'craeteBookingWithWallet');

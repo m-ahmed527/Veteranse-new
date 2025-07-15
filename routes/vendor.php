@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\Vendor\BookingController;
+use App\Http\Controllers\Api\Vendor\OrderController;
 use App\Http\Controllers\Api\Vendor\PlanController;
 use App\Http\Controllers\Api\Vendor\ProductController;
 use App\Http\Controllers\Api\Vendor\ServiceController;
@@ -56,5 +58,13 @@ Route::prefix('vendor')->group(function () {
         Route::get('/connect', 'startOnBoardProcess');
         Route::get('/connect/{account_id}/return', 'returnFromOnBoardProcess')->withoutMiddleware(['auth:sanctum', 'is_vendor']);
         Route::post('/connect/delete-account/{account_id}', 'deleteStripeAccount');
+    });
+
+    Route::prefix('booking')->controller(BookingController::class)->group(function () {
+        Route::get('/bookings-of-vendor', 'index');
+    });
+
+    Route::prefix('order')->controller(OrderController::class)->group(function () {
+        Route::get('/orders-of-vendor', 'index');
     });
 });

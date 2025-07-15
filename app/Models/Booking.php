@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Traits\Filter;
 use Illuminate\Database\Eloquent\Model;
 
 class Booking extends Model
 {
+    use Filter;
     protected $guarded = ['id'];
 
     public function user()

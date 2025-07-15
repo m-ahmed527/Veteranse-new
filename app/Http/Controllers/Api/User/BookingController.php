@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\User;
 
+use App\Filters\BookingFilter;
 use App\Http\Controllers\Controller;
 use App\Models\AddOn;
 use App\Models\Booking;
@@ -17,6 +18,20 @@ use Stripe\PaymentMethod;
 
 class BookingController extends Controller
 {
+    public function getAllBookings()
+    {
+        try {
+            $bookings = Booking::with(['service', 'addOns'])->filter([
+                BookingFilter::class,
+            ])->get();
+            if ($bookings->isEmpty()) {
+                return responseSuccess('No bookings found');
+            }
+            return responseSuccess('Bookings retrieved', $bookings);
+        } catch (\Exception $e) {
+            return responseError($e->getMessage(), 400);
+        }
+    }
     public function index()
     {
         try {
