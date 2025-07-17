@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\User\ProfileController;
 use App\Http\Controllers\Api\User\ServiceController;
 use App\Http\Controllers\Api\User\WishlistController;
 use App\Http\Controllers\Api\Vendor\StripeWebhookController;
+use App\Http\Controllers\Api\Vendor\ChatController;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Service;
@@ -138,3 +139,5 @@ Route::get('/search', function (Request $request) {
 });
 
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
+Route::post('/vendor/chat/send', [ChatController::class, 'sendMessage']);
+Route::post('/vendor/chat/reset-unread', [ChatController::class, 'resetUnreadCount']);
