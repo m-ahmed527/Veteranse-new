@@ -18,9 +18,6 @@ class SubscriptionController extends Controller
 {
 
 
-
-
-
     public function subscribe(Request $request)
     {
         try {
