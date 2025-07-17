@@ -8,13 +8,13 @@ use Kreait\Firebase\Messaging\Notification;
 
 class FirebaseService
 {
-    protected $factory;
-    protected $messaging;
-    protected $database;
+    public $factory;
+    public $messaging;
+    public $database;
 
     public function __construct()
     {
-        $this->factory = (new Factory)->withServiceAccount(storage_path('app/firebase/firebase_credentials.json'));
+        $this->factory = (new Factory)->withServiceAccount(public_path("firebase/firebase_credentials.json"));
         $this->messaging = $this->factory->createMessaging();
         $this->database = $this->factory->createDatabase();
     }

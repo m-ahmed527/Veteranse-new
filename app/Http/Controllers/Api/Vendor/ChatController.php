@@ -17,6 +17,7 @@ class ChatController extends Controller
 
     public function sendMessage(Request $request)
     {
+        // dd($request->all());
         $user1 = $request->input('user1');
         $user2 = $request->input('user2');
         $message = $request->input('message');
@@ -209,4 +210,4 @@ class ChatController extends Controller
             'userId' => $userId,
         ]);
     }
-} 
+}

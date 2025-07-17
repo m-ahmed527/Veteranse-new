@@ -7,6 +7,7 @@ use App\Http\Requests\Api\StoreAuthRequest;
 use App\Mail\OtpMail;
 use App\Mail\PasswordResetMail;
 use App\Models\User;
+use App\Services\FirebaseService;
 use App\Traits\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +20,12 @@ use Stripe\Account;
 
 class AuthController extends Controller
 {
+    protected $firebase;
 
+    public function __construct(FirebaseService $firebase)
+    {
+        $this->firebase = $firebase;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -120,6 +126,7 @@ class AuthController extends Controller
                 getOrCreateStripeAccount($user);
             }
             DB::commit();
+            $this->createUserIfNotExists($user);
             $user->fresh();
             $user['token'] = $token;
             return responseSuccess(ucfirst($user->role) . " verified successfully.", $user);
@@ -241,6 +248,34 @@ class AuthController extends Controller
         }
     }
 
+    public function updateFcmToken(Request $request)
+    {
+        try {
+            // dd($request->all());
+            $request->validate([
+                'fcmToken' => 'required|string',
+                'deviceType' => 'required|string|in:ios,android',
+            ]);
+            $user = auth()->user();
+            $cleanedUid = trim((string)$user->id);
+            $userRef = $this->firebase->database->getReference('users/' . $cleanedUid);
+            $snapshot = $userRef->getSnapshot();
+            $existingUserData = $snapshot->getValue();
+            if ($existingUserData) {
+                // User exists, update the existing document
+                $updatedData = [
+                    'updatedAt' => now()->timestamp * 1000,
+                ];
+                $updatedData['fcmToken'] = $request->fcmToken;
+                $updatedData['deviceType'] = $request->deviceType;
+                $userRef->update($updatedData);
+            }
+
+            return responseSuccess('FCM Token updated successfully.', null);
+        } catch (\Exception $e) {
+            return responseError($e->getMessage(), 400);
+        }
+    }
 
 
 
@@ -272,5 +307,56 @@ class AuthController extends Controller
             $data['avatar'] = asset('avatars') . '/' . $imageName;
         }
         return $data;
+    }
+
+
+
+    protected function createUserIfNotExists($userData)
+    {
+        $email = $userData->email ?? null;
+        $uid = $userData->id ?? null;
+        $avatar = $userData->avatar ?? null;
+        $fcmToken = '';
+        $deviceType = 'ios';
+        $name = $userData->name ?? null;
+
+        // if (!$email || !$uid) {
+        //     throw new \Exception('Missing required fields: email or uid');
+        // }
+
+        $cleanedUid = trim((string)$uid);
+        $userRef = $this->firebase->database->getReference('users/' . $cleanedUid);
+        $snapshot = $userRef->getSnapshot();
+        $existingUserData = $snapshot->getValue();
+
+        if ($existingUserData) {
+            // User exists, update the existing document
+            $updatedData = [
+                'email' => $email,
+                'updatedAt' => now()->timestamp * 1000,
+            ];
+            if ($name !== null) $updatedData['name'] = $name ?: ($existingUserData['name'] ?? null);
+            if ($avatar !== null) $updatedData['avatar'] = $avatar ?: ($existingUserData['avatar'] ?? null);
+            if ($fcmToken !== null) $updatedData['fcmToken'] = $fcmToken ?: ($existingUserData['fcmToken'] ?? null);
+            if ($deviceType !== null) $updatedData['deviceType'] = $deviceType ?: ($existingUserData['deviceType'] ?? null);
+
+            $userRef->update($updatedData);
+            // return ['exists' => true, 'updated' => true, 'userId' => $cleanedUid];
+        }
+
+        // User does not exist, create new
+        $newUser = [
+            'id' => $cleanedUid,
+            'email' => $email,
+            'createdAt' => now()->timestamp * 1000,
+            'chatIds' => [],
+        ];
+        if ($name !== null) $newUser['name'] = $name;
+        if ($avatar !== null) $newUser['avatar'] = $avatar;
+        if ($fcmToken !== null) $newUser['fcmToken'] = $fcmToken;
+        if ($deviceType !== null) $newUser['deviceType'] = $deviceType;
+
+        $userRef->set($newUser);
+        // return ['exists' => false, 'created' => true, 'userId' => $cleanedUid];
     }
 }

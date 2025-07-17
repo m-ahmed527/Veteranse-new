@@ -46,6 +46,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/resend-otp',  'resendOtp');
     Route::post('/login',  'login');
     Route::post('/logout',  'logout')->middleware('auth:sanctum');
+    Route::post('/update-fcmtoken', 'updateFcmToken')->middleware('auth:sanctum');
     Route::post('/forgot-password',  'forgotPassword');
     Route::post('/verify-reset-token',  'verifyResetToken');
     Route::post('/reset-password',  'resetPassword');
