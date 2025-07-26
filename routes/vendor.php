@@ -62,6 +62,8 @@ Route::prefix('vendor')->group(function () {
 
     Route::prefix('booking')->controller(BookingController::class)->group(function () {
         Route::get('/bookings-of-vendor', 'index');
+        Route::get('/single-booking/{id}', 'show');
+        Route::post('/cancel-booking/{id}', 'cancelBooking');
     });
 
     Route::prefix('order')->controller(OrderController::class)->group(function () {

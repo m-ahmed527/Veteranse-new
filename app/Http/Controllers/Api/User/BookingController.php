@@ -10,6 +10,7 @@ use App\Models\Service;
 use App\Models\Tax;
 use App\Rules\AddOnForService;
 use App\Rules\FutureBookingTime;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Stripe\Customer;
@@ -78,7 +79,24 @@ class BookingController extends Controller
         }
     }
 
-    public function craeteBookingWithWallet(Request $request)
+    public function show($id)
+    {
+        try {
+            $booking = Booking::with(['addOns', 'service', 'user'])->find($id);
+            if (!$booking) {
+                return responseError('Booking not found', 404);
+            }
+
+            if ($booking->user_id != auth()->id()) {
+                return responseError('You are not authorized to view this booking', 403);
+            }
+            return responseSuccess('Booking retrieved successfully', $booking);
+        } catch (\Exception $e) {
+            return responseError($e->getMessage());
+        }
+    }
+
+    public function createBookingWithWallet(Request $request)
     {
         try {
             $user = auth()->user();
@@ -98,6 +116,41 @@ class BookingController extends Controller
             $user->debitWallet($data['total_price'], 'Booked a service: ' . $service->name);
             DB::commit();
             return responseSuccess('Booking created successfully', ['wallet_used' => true, 'booking' => $booking->load(['service', 'addOns'])]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return responseError($e->getMessage(), 400);
+        }
+    }
+
+
+    public function cancelBooking(Request $request, string $id)
+    {
+        try {
+            $user = auth()->user();
+            $booking = Booking::findOrFail($id);
+            // dd(Carbon::parse($booking->booking_date)->isAfter(now()), Carbon::parse($booking->booking_date)->isFuture());
+            if ($booking->user_id != $user->id) {
+                return responseError('You are not authorized to cancel this booking', 403);
+            }
+            if ($booking->booking_status == 'cancelled') {
+                return responseError('This booking has already been cancelled', 400);
+            }
+            if (!Carbon::parse($booking->booking_date)->isFuture()) {
+                return responseError('You can only cancel bookings that are in the future', 400);
+            }
+            if ($booking->payment_status == 'succeeded' && $booking->booking_status == 'confirmed') {
+                DB::beginTransaction();
+                $booking->update(['booking_status' => 'cancelled']);
+                $user->creditWallet($booking->total_price, 'Booking cancelled for : ' . $booking->service_name);
+                DB::commit();
+                return responseSuccess('Booking cancelled successfully and wallet credited', $booking->load(['service', 'addOns']));
+            }
+            if ($booking->payment_status != "succeeded") {
+                DB::beginTransaction();
+                $booking->update(['booking_status' => 'cancelled']);
+                DB::commit();
+                return responseSuccess('Booking cancelled successfully', $booking->load(['service', 'addOns']));
+            }
         } catch (\Exception $e) {
             DB::rollBack();
             return responseError($e->getMessage(), 400);

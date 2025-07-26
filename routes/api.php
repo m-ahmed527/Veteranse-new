@@ -100,7 +100,9 @@ Route::middleware('auth:sanctum')->prefix('booking')->controller(BookingControll
     Route::get('/get-all-bookings', 'getAllBookings');
     Route::get('/get-bookings', 'index');
     Route::post('/make-booking', 'store');
-    Route::post('/make-booking-wallet', 'craeteBookingWithWallet');
+    Route::get('/single-booking/{id}', 'show');
+    Route::post('/make-booking-wallet', 'createBookingWithWallet');
+    Route::post('/cancel-booking/{id}', 'cancelBooking');
 });
 
 Route::middleware('auth:sanctum')->prefix('tax')->controller(TaxController::class)->group(function () {

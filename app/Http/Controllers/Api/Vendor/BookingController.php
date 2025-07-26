@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api\Vendor;
 use App\Filters\BookingFilter;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BookingController extends Controller
 {
@@ -30,35 +32,59 @@ class BookingController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        try {
+            $booking = Booking::with(['addOns', 'service', 'user'])->find($id);
+            if (!$booking) {
+                return responseError('Booking not found', 404);
+            }
+
+            if ($booking->vendor_id != auth()->user()->id) {
+                return responseError('You are not authorized to view this booking', 403);
+            }
+            return responseSuccess('Booking retrieved successfully', $booking);
+        } catch (\Exception $e) {
+            return responseError('Failed to retrieve booking', $e->getMessage());
+        }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function cancelBooking(Request $request,  $id)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        try {
+            $vendor = auth()->user();
+            $booking = Booking::findOrFail($id);
+            $user = $booking->user;
+            if ($booking->vendor_id != $vendor->id) {
+                return responseError('You are not authorized to cancel this booking', 403);
+            }
+            if ($booking->booking_status == 'cancelled') {
+                return responseError('This booking has already been cancelled', 400);
+            }
+            if (!Carbon::parse($booking->booking_date)->isFuture()) {
+                return responseError('You can only cancel bookings that are in the future', 400);
+            }
+            if ($booking->payment_status == 'succeeded' && $booking->booking_status == 'confirmed') {
+                DB::beginTransaction();
+                $booking->update(['booking_status' => 'cancelled']);
+                $user->creditWallet($booking->total_price, 'Booking cancelled by vendor for : ' . $booking->service_name);
+                DB::commit();
+                return responseSuccess('Booking cancelled successfully and wallet credited', $booking->load(['service', 'addOns']));
+            }
+            if ($booking->payment_status != "succeeded") {
+                DB::beginTransaction();
+                $booking->update(['booking_status' => 'cancelled']);
+                DB::commit();
+                return responseSuccess('Booking cancelled successfully', $booking->load(['service', 'addOns']));
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return responseError($e->getMessage(), 400);
+        }
     }
 }

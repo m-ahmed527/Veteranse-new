@@ -147,6 +147,12 @@ class ServiceController extends Controller
             'description' => $request->description,
             'price' => $request->price,
             'status' => $request->status,
+            'discounted_price' => $request->discounted_price,
+            'address' => $request->address,
+            'city' => $request->city,
+            'country' => $request->country,
+            'state' => $request->state,
+            'zip_code' => $request->zip_code,
         ];
         if ($request->hasFile('image')) {
             $images = [];
@@ -207,6 +213,11 @@ class ServiceController extends Controller
             'price' => $request->price ?? $service->price,
             'discounted_price' => $request->discounted_price ?? $service->discounted_price,
             'status' => $request->status ?? $service->status,
+            'address' => $request->address ?? $service->address,
+            'city' => $request->city ?? $service->city,
+            'country' => $request->country ?? $service->country,
+            'state' => $request->state ?? $service->state,
+            'zip_code' => $request->zip_code ?? $service->zip_code,
         ];
         if ($request->hasFile('image')) {
             $images = [];
@@ -229,7 +240,7 @@ class ServiceController extends Controller
                 'company' => 'nullable|string',
                 'description' => 'required|string',
                 'price' => 'required|numeric',
-                'discounted_price' => 'required|numeric|min:0',
+                'discounted_price' => 'required|numeric|min:0|lt:price',
                 'status' => 'required|boolean',
                 'image' => 'required|array',
                 'image.*' => 'required|image', // Assuming image is an array of images
@@ -237,6 +248,11 @@ class ServiceController extends Controller
                 'add_ons.*' => 'exists:add_ons,id',
                 'add_on_price' => 'nullable|array',
                 'add_on_price.*' => 'numeric|min:0',
+                'address' => 'required|string',
+                'city' => 'nullable|string',
+                'country' => 'nullable|string',
+                'state' => 'nullable|string',
+                'zip_code' => 'nullable|string',
             ],
             [
                 'category_id.required' => 'Category is required',
