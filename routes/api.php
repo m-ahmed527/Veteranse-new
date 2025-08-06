@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\User\OrderController;
 use App\Http\Controllers\Api\User\ProductController;
 use App\Http\Controllers\Api\User\ProfileController;
 use App\Http\Controllers\Api\User\ServiceController;
+use App\Http\Controllers\Api\User\UserController;
 use App\Http\Controllers\Api\User\WishlistController;
 use App\Http\Controllers\Api\Vendor\StripeWebhookController;
 use App\Http\Controllers\Api\Vendor\ChatController;
@@ -39,6 +40,9 @@ Route::get('/user', function (Request $request) {
     }
 })->middleware('auth:sanctum');
 
+Route::middleware('auth:sanctum')->controller(UserController::class)->prefix('users')->group(function () {
+    Route::get('/all-users', 'index');
+});
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('/register',  'register');

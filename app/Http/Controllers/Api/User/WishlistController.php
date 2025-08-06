@@ -56,7 +56,7 @@ class WishlistController extends Controller
 
             $user = auth()->user();
 
-            if ($request->type === 'product') {
+            if ($request->type == 'product') {
                 $user->wishlistedProducts()->syncWithoutDetaching([$request->id]);
             } else {
                 $user->wishlistedServices()->syncWithoutDetaching([$request->id]);
@@ -73,35 +73,7 @@ class WishlistController extends Controller
         }
     }
 
-    // public function add(Request $request)
-    // {
-    //     try {
-    //         $request->validate([
-    //             'type' => 'required|in:product,service',
-    //             'id' => 'required|integer',
-    //         ]);
-    //         if ($request->type == 'product' && !(Product::where('id', $request->id)->exists())) {
-    //             return responseError('Product not found', 404);
-    //         }
-    //         if ($request->type == 'service' && !(Service::where('id', $request->id)->exists())) {
-    //             return responseError('Service not found', 404);
-    //         }
 
-    //         DB::beginTransaction();
-    //         $user = auth()->user();
-
-    //         if ($request->type == 'product') {
-    //             $user->wishlistedProducts()->syncWithoutDetaching([$request->id]);
-    //         } else {
-    //             $user->wishlistedServices()->syncWithoutDetaching([$request->id]);
-    //         }
-    //         DB::commit();
-    //         return responseSuccess('Item added to wishlist');
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         return responseError($e->getMessage(), 400);
-    //     }
-    // }
 
     public function remove(Request $request)
     {
@@ -112,7 +84,7 @@ class WishlistController extends Controller
             ]);
             $user = auth()->user();
             // Check if product/service exists
-            if ($request->type === 'product') {
+            if ($request->type == 'product') {
                 if (!$user->wishlistedProducts()->where('wishlistable_id', $request->id)->where('wishlistable_type', Product::class)->exists()) {
                     return responseError('Product not found in wishlist ', 404);
                 }
@@ -162,4 +134,78 @@ class WishlistController extends Controller
             return responseError($e->getMessage(), 400);
         }
     }
+
+
+
+    // public function toggle(Request $request)
+    // {
+    //     try {
+    //         $request->validate([
+    //             'type' => 'required|in:product,service',
+    //             'id' => 'required|integer',
+    //         ]);
+
+    //         $user = auth()->user();
+    //         $itemId = $request->id;
+    //         $itemType = $request->type;
+
+    //         DB::beginTransaction();
+
+    //         // Check if item is in wishlist
+    //         $isItemInWishlist = $this->isItemInWishlist($user, $itemType, $itemId);
+
+    //         if ($isItemInWishlist) {
+    //             // Remove item from wishlist
+    //             $this->removeFromWishlist($user, $itemType, $itemId);
+    //             $message = 'Item removed from wishlist';
+    //         } else {
+    //             // Add item to wishlist
+    //             $this->addToWishlist($user, $itemType, $itemId);
+    //             $message = 'Item added to wishlist';
+    //         }
+
+    //         // Recalculate wishlist count
+    //         $wishlistCount = $this->getWishlistCount($user);
+    //         DB::commit();
+
+    //         return responseSuccess($message, [
+    //             'wishlist_count' => $wishlistCount,
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return responseError($e->getMessage(), 400);
+    //     }
+    // }
+
+    // private function isItemInWishlist($user, $itemType, $itemId)
+    // {
+    //     if ($itemType === 'product') {
+    //         return $user->wishlistedProducts()->where('wishlistable_id', $itemId)->where('wishlistable_type', Product::class)->exists();
+    //     } else {
+    //         return $user->wishlistedServices()->where('wishlistable_id', $itemId)->where('wishlistable_type', Service::class)->exists();
+    //     }
+    // }
+
+    // private function removeFromWishlist($user, $itemType, $itemId)
+    // {
+    //     if ($itemType === 'product') {
+    //         $user->wishlistedProducts()->detach($itemId);
+    //     } else {
+    //         $user->wishlistedServices()->detach($itemId);
+    //     }
+    // }
+
+    // private function addToWishlist($user, $itemType, $itemId)
+    // {
+    //     if ($itemType === 'product') {
+    //         $user->wishlistedProducts()->syncWithoutDetaching([$itemId]);
+    //     } else {
+    //         $user->wishlistedServices()->syncWithoutDetaching([$itemId]);
+    //     }
+    // }
+
+    // private function getWishlistCount($user)
+    // {
+    //     return $user->wishlistedProducts()->count() + $user->wishlistedServices()->count();
+    // }
 }

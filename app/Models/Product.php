@@ -6,12 +6,13 @@ use App\Traits\Filter;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Facades\Auth;
 
 class Product extends Model
 {
     use Filter;
     protected $guarded = ['id'];
-    protected $appends = ['type'];
+    protected $appends = ['type', 'wishlist'];
 
 
     protected $casts = [
@@ -20,6 +21,19 @@ class Product extends Model
     public function getTypeAttribute()
     {
         return 'product'; // or 'service' in Service model
+    }
+
+    public function getWishlistAttribute()
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return false; // Guest users ke liye wishlist false
+        }
+
+        return $this->wishlistedByUsers()
+            ->where('user_id', $user->id)
+            ->exists();
     }
     public function user(): BelongsTo
     {

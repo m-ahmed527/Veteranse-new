@@ -12,7 +12,7 @@ class Service extends Model
 {
     use Filter;
     protected $guarded = ['id'];
-    protected $appends = ['type'];
+    protected $appends = ['type', 'wishlist'];
 
     protected $hidden = [
         'category_id',
@@ -27,6 +27,20 @@ class Service extends Model
     public function getTypeAttribute()
     {
         return 'service'; // or 'service' in Service model
+    }
+
+
+    public function getWishlistAttribute()
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return false; // Guest users ke liye wishlist false
+        }
+
+        return $this->wishlistedByUsers()
+            ->where('user_id', $user->id)
+            ->exists();
     }
     public function user(): BelongsTo
     {
