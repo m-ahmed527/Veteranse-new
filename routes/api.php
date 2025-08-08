@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\User\CategoryController;
 use App\Http\Controllers\Api\User\OrderController;
 use App\Http\Controllers\Api\User\ProductController;
 use App\Http\Controllers\Api\User\ProfileController;
+use App\Http\Controllers\Api\User\ReviewController;
 use App\Http\Controllers\Api\User\ServiceController;
 use App\Http\Controllers\Api\User\UserController;
 use App\Http\Controllers\Api\User\WishlistController;
@@ -122,6 +123,11 @@ Route::middleware('auth:sanctum')->prefix('order')->controller(OrderController::
     Route::post('/make-order', 'store');
     Route::post('/make-order-wallet', 'craeteOrderWithWallet');
 });
+
+Route::middleware('auth:sanctum')->prefix('review')->controller(ReviewController::class)->group(function () {
+    Route::post('/store-review', 'store');
+});
+
 
 Route::get('/search', function (Request $request) {
     try {

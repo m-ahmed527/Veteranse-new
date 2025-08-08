@@ -6,6 +6,7 @@ use App\Traits\Filter;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Service extends Model
@@ -67,5 +68,14 @@ class Service extends Model
     public function bookings()
     {
         return $this->hasMany(Booking::class);
+    }
+
+    // public function reviewedByUsers(): MorphToMany
+    // {
+    //     return $this->morphToMany(User::class, 'reviewable', 'reviews')->withTimestamp();
+    // }
+    public function reviews(): MorphMany
+    {
+        return $this->morphMany(Review::class, 'reviewable');
     }
 }

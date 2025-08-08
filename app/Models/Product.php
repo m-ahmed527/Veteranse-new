@@ -5,6 +5,9 @@ namespace App\Models;
 use App\Traits\Filter;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Facades\Auth;
 
@@ -58,10 +61,19 @@ class Product extends Model
         return $this->morphToMany(User::class, 'wishlistable', 'wishlists')->withTimestamps();
     }
 
-    public function orders()
+    public function orders(): BelongsToMany
     {
         return $this->belongsToMany(Order::class)
             ->withPivot('product_price', 'quantity', 'total_price', 'vendor_id', 'tax_price', 'vendor_cut')
             ->withTimestamps();
+    }
+
+    // public function reviewedByUsers(): MorphToMany
+    // {
+    //     return $this->morphToMany(User::class, 'reviewable', 'reviews')->withTimestamp();
+    // }
+    public function reviews(): MorphMany
+    {
+        return $this->morphMany(Review::class, 'reviewable');
     }
 }

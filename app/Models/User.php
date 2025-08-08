@@ -108,6 +108,16 @@ class User extends Authenticatable
         return $this->morphedByMany(Service::class, 'wishlistable', 'wishlists')->withTimestamps();
     }
 
+
+    // public function reviewedProducts(): MorphToMany
+    // {
+    //     return $this->morphedByMany(Product::class, 'reviewable', 'reviews')->withTimestamps();
+    // }
+    // public function reviewedServices(): MorphToMany
+    // {
+    //     return $this->morphedByMany(Service::class, 'reviewable', 'reviews')->withTimestamps();
+    // }
+
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
@@ -131,6 +141,11 @@ class User extends Authenticatable
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
     }
 
     /**

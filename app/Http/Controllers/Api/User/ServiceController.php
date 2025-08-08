@@ -29,7 +29,7 @@ class ServiceController extends Controller
     public function show($id)
     {
         try {
-            $service = Service::with(['category', 'addOns', 'user'])->find($id);
+            $service = Service::with([ 'category', 'addOns', 'user','reviews.user'])->find($id);
             if (!$service) {
                 return responseError('Service not found', 404);
             }

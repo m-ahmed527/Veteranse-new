@@ -28,7 +28,7 @@ class ProductController extends Controller
     public function show($id)
     {
         try {
-            $product = Product::with(['category', 'user'])->find($id);
+            $product = Product::with(['category', 'user', 'reviews.user'])->find($id);
             if (!$product) {
                 return responseError('Product not found', 404);
             }
