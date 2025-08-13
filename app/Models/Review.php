@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class Review extends Model
 {
     protected $guarded = ['id'];
-    public function reviews(): MorphTo
+    public function reviewable(): MorphTo
     {
         return $this->morphTo();
     }
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 }

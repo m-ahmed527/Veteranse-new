@@ -50,7 +50,6 @@ class BookingController extends Controller
             $service = Service::find($request->service_id);
             $vendor = $service->user; //the service has a user_id field for the vendor
             $data = $this->sanitizedRequest($request, $service, $vendor);
-
             setStripeKey();
             if (!$user->stripe_customer_id) {
                 $customer = createStripeCustomer($user);
@@ -160,8 +159,10 @@ class BookingController extends Controller
     {
 
         $tax = getTax();
-
-        $total = $data['base_price'];
+        $from = Carbon::parse($data['booking_time_from']);
+        $to = Carbon::parse($data['booking_time_to']);
+        $hours = $from->diffInHours($to) > 1 ? ceil($from->diffInHours($to)) : 1; // pure integer hours
+        $total = $data['base_price'] * $hours;
         foreach ($request->add_ons as $addOnId) {
             // $addOn = AddOn::find($addOnId);
             $addOn = $service->addOns()->where('add_on_id', $addOnId)->first();

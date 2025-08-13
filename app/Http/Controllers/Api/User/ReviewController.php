@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Review;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,33 +13,40 @@ class ReviewController extends Controller
 {
     public function index(Request $request)
     {
-        //
+        try {
+            $reviews = Review::with(['user', 'reviewable'])->latest()->get();
+
+            return responseSuccess('All reviews retrieved successfully', $reviews);
+        } catch (\Exception $e) {
+            return responseError($e->getMessage(), 400);
+        }
     }
     public function store(Request $request)
     {
         try {
             $this->validateRequest($request);
-            if ($request->type == 'product') {
-                if (!Product::where('id', $request->id)->exists()) {
-                    return responseError('Product not found', 404);
-                }
-            } else {
-                if (!Service::where('id', $request->id)->exists()) {
-                    return responseError('Service not found', 404);
-                }
+            $model = $request->type == 'product' ? Product::class : Service::class;
+            $item = $model::find($request->id);
+
+            if (!$item) {
+                return responseError(ucfirst($request->type) . ' not found', 404);
             }
+
             DB::beginTransaction();
 
-            $user = auth()->user();
-            $data = $this->prepareReview($request);
-            if ($request->type == 'product') {
-                $user->reviewedProducts()->attach($data);
-            } else {
-                $user->reviewedServices()->attach($data);
-            }
-            $submittedReview = $user->reviews()->where('reviewable_type', $request->type == 'product' ? Product::class : Service::class)->where('reviewable_id', $request->id)->latest()->first();
+            // Review create karo directly relation se
+            $submittedReview = $item->reviews()->create([
+                'user_id' => auth()->id(),
+                'review' => $request->review,
+                'rating' => $request->rating,
+            ]);
+
             DB::commit();
-            return responseSuccess('Review submitted successfully');
+
+            return responseSuccess(
+                'Review submitted successfully',
+                $submittedReview->load('user')
+            );
         } catch (\Exception $e) {
             DB::rollBack();
             return responseError($e->getMessage(), 400);

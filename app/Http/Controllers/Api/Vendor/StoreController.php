@@ -60,4 +60,15 @@ class StoreController extends Controller
         // dd($data);
         return $data;
     }
+    public function destroy(Request $request)
+    {
+        try {
+            // dd(123);
+            $user = auth()->user();
+            $user->delete();
+            return responseSuccess('User deleted successfully');
+        } catch (\Exception $e) {
+            return responseError($e->getMessage(), 500);
+        }
+    }
 }

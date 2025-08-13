@@ -61,6 +61,7 @@ Route::post('email/resend', [EmailVerificationController::class, 'resend']);
 
 Route::middleware('auth:sanctum')->controller(ProfileController::class)->group(function () {
     Route::post('/edit/profile/{user}', 'update');
+    Route::post('/delete-account', 'destroy');
 });
 
 Route::middleware('auth:sanctum')->prefix('category')->controller(CategoryController::class)->group(function () {
@@ -125,6 +126,7 @@ Route::middleware('auth:sanctum')->prefix('order')->controller(OrderController::
 });
 
 Route::middleware('auth:sanctum')->prefix('review')->controller(ReviewController::class)->group(function () {
+    Route::get('/get-all-reviews', 'index');
     Route::post('/store-review', 'store');
 });
 

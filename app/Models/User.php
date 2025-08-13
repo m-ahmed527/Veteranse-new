@@ -4,12 +4,14 @@ namespace App\Models;
 
 use App\Traits\Filter;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasRelationships;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -17,7 +19,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens, Filter;
+    use HasFactory, Notifiable, HasApiTokens, Filter, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -56,6 +58,12 @@ class User extends Authenticatable
 
         ];
     }
+    // protected static function booted()
+    // {
+    //     static::addGlobalScope('withTrashed', function (Builder $builder) {
+    //         $builder->withTrashed();
+    //     });
+    // }
     // public function toArray()
     // {
     //     $array = parent::toArray();

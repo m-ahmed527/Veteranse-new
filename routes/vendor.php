@@ -19,6 +19,7 @@ Route::prefix('vendor')->group(function () {
 
     Route::prefix('store')->controller(StoreController::class)->group(function () {
         Route::post('/update/{vendor}', 'update');
+        Route::post('/delete-account', 'destroy');
     });
 
 
