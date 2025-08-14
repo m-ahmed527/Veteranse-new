@@ -43,7 +43,9 @@ Route::get('/user', function (Request $request) {
 
 Route::middleware('auth:sanctum')->controller(UserController::class)->prefix('users')->group(function () {
     Route::get('/all-users', 'index');
+    Route::post('/become-vendor', 'becomeVendor');
 });
+
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('/register',  'register');

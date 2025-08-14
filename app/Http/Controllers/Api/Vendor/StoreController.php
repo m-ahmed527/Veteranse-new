@@ -21,7 +21,6 @@ class StoreController extends Controller
     public function update(Request $request, User $vendor)
     {
         try {
-            // dd($request->all());
             $data = $this->sanitizedRequest($request, $vendor);
             $vendor->update($data);
             return responseSuccess('Store updated succesfully', $vendor->fresh());
@@ -57,13 +56,11 @@ class StoreController extends Controller
             }
             $data['vendor_store_gallery'] = $imageNames;
         }
-        // dd($data);
         return $data;
     }
     public function destroy(Request $request)
     {
         try {
-            // dd(123);
             $user = auth()->user();
             $user->delete();
             return responseSuccess('User deleted successfully');

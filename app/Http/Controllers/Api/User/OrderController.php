@@ -29,6 +29,12 @@ class OrderController extends Controller
         try {
             $request->validate([
                 'payment_method_id' => 'required|string',
+                'address' => 'nullable|string',
+                'city' => 'nullable|string',
+                'state' => 'nullable|string',
+                'country' => 'nullable|string',
+                'zip_code' => 'nullable|string',
+                'phone' => 'nullable|string',
             ]);
             $user = auth()->user();
             $cart = $user->cart->load('products');
@@ -46,7 +52,7 @@ class OrderController extends Controller
             $paymentMethod = attachPaymentMethodToCustomer($request->payment_method_id, $user);
 
             DB::beginTransaction();
-            $order = $this->createOrderFromCart($cart);
+            $order = $this->createOrderFromCart($request, $cart);
             $paymentIntent = createPaymentIntent($request, $order->total_amount,  $user, 'Product', [
                 'user_id' => $user->id,
                 'order_id' => $order->id,
@@ -84,13 +90,19 @@ class OrderController extends Controller
         }
     }
 
-    private function createOrderFromCart($cart, $paymentType = 'card')
+    private function createOrderFromCart($request, $cart, $paymentType = 'card')
     {
         $order = auth()->user()->orders()->create([
             'total_amount' => $cart->total_amount,
             'order_status' => $paymentType == 'wallet' ? 'placed' : 'pending',
             'payment_type' => $paymentType,
             'payment_status' => $paymentType == 'wallet' ? 'succeeded' : 'pending',
+            'address' => $request->address ?? null,
+            'city' => $request->city ?? null,
+            'state' => $request->state ?? null,
+            'country' => $request->country ?? null,
+            'zip_code' => $request->zip_code ?? null,
+            'phone' => $request->phone ?? null,
         ]);
         $data = $this->prepareOrderProductData($cart);
         $order->products()->sync($data);

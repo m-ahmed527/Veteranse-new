@@ -61,14 +61,5 @@ class ReviewController extends Controller
             "review" => "required|string",
         ]);
     }
-    private function prepareReview(Request $request)
-    {
-        $data = [
-            $request->id => [
-                'rating' => $request->rating,
-                'review' => $request->review,
-            ],
-        ];
-        return $data;
-    }
+   
 }

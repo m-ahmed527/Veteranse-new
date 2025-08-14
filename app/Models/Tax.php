@@ -11,10 +11,11 @@ class Tax extends Model
 
     public function taxAmount($amount)
     {
+        // dd(floatval($this->rate));
         if ($this->type == 'percentage') {
-            return ($this->rate / 100) * $amount;
+            return (floatval($this->rate) / 100) * $amount;
         } elseif ($this->type == 'fixed') {
-            return $this->rate;
+            return floatval($this->rate);
         }
         return 0; // Default case if type is not recognized
     }

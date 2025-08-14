@@ -179,6 +179,7 @@ class BookingController extends Controller
             'total_price' => $total,
             'tax_price' => $taxPrice,
             'vendor_cut' => $vendorCut,
+            'charge_hour' => $hours,
         ]);
     }
 
@@ -192,6 +193,12 @@ class BookingController extends Controller
             'booking_time_to' => 'required|date_format:H:i|after:booking_time_from',
             'add_ons' => 'nullable|array',
             'add_ons.*' => ['exists:add_on_service,add_on_id', new AddOnForService($request->service_id)],
+            'address' => 'nullable|string',
+            'city' => 'nullable|string',
+            'state' => 'nullable|string',
+            'country' => 'nullable|string',
+            'zip_code' => 'nullable|string',
+            'phone' => 'nullable|string',
             // 'booking_date_time' => ['required', new FutureBookingTime], // Apply custom rule here
         ], [
             'service_id.required' => 'Service is required.',
@@ -226,6 +233,12 @@ class BookingController extends Controller
             'total_price' => $basePrice,
             'booking_status' => 'pending',
             'payment_status' => 'pending',
+            'address' => $request->address ?? null,
+            'city' => $request->city ?? null,
+            'state' => $request->state ?? null,
+            'country' => $request->country ?? null,
+            'zip_code' => $request->zip_code ?? null,
+            'phone' => $request->phone ?? null,
         ];
         return $data;
     }
